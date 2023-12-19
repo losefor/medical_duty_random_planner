@@ -3,12 +3,13 @@ import {
   CategoryNames as CategoryName,
   extractCategoryScoreMap,
 } from "./category";
-import { User } from "./types/user";
 import {
   getDaysInMonth,
   getRandomMapEntry,
   randNumsUniqueToMax,
 } from "./utils";
+
+import { users } from "./users";
 
 const categories: Category[] = [
   {
@@ -81,50 +82,27 @@ const categories: Category[] = [
   },
 ];
 
-const users: User[] = [
-  {
-    id: 1,
-    name: "Joana Doe",
-    scoreTarget: 21,
-    gender: "FEMALE",
-    monthlyDuties: [],
-  },
-  {
-    id: 2,
-    name: "Raafat Turki",
-    gender: "MALE",
-    scoreTarget: 22,
-    monthlyDuties: [
-      { duty: "Emergency:Night:Surgical_MH", dom: 1 },
-      { duty: "Referrals:Night", dom: 3 },
-      { duty: "Emergency:Pre_Night:Surgical_MH", dom: 12 },
-      { duty: "Emergency:Night:Triage", dom: 19 },
-      { duty: "Emergency:Night:Surgical_MH", dom: 20 },
-      { duty: "Emergency:Night:Medical_MH", dom: 21 },
-    ],
-  },
-];
-
 // get the "leaf" categories into a map of <string_path_to leaf, leaf_score>
 const scorePerCategory = extractCategoryScoreMap(categories);
 
 // do the calculations
 users.forEach((user) => {
   let duties: string[] = [];
+  const scoreTarget = user.gender === "MALE" ? 22 : 21;
 
   // calculate base user score
-  let totalScore = user.monthlyDuties.reduce((acc, curr, i) => {
+  let totalScore = user.monthlyEvents.reduce((acc, curr, i) => {
     // duties.push(curr.duty)
     return acc + (scorePerCategory.get(curr.duty) ?? 0);
   }, 0);
 
   // a user comes in w a base score already greater than their scoreTarget
-  if (totalScore > user.scoreTarget) {
+  if (totalScore > scoreTarget) {
     // TODO: handle faulty users
   }
 
   // add up user scores to the users scoreTarget
-  while (totalScore < user.scoreTarget) {
+  while (totalScore < scoreTarget) {
     let entry = getRandomMapEntry(scorePerCategory);
 
     if (entry) {
@@ -139,7 +117,7 @@ users.forEach((user) => {
         isNight = duty.split(":").includes("Night");
       }
 
-      if (totalScore + score <= user.scoreTarget) {
+      if (totalScore + score <= scoreTarget) {
         duties.push(duty);
         totalScore += score;
       }
@@ -148,7 +126,7 @@ users.forEach((user) => {
 
   const dutyDays = randNumsUniqueToMax(
     getDaysInMonth(2023, 2),
-    user.monthlyDuties.map((duty) => duty.dom),
+    user.monthlyEvents.map((duty) => duty.dom),
     duties.length
   );
   const generatedMonthlyDuties = duties.map((duty, i) => {

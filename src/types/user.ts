@@ -7,6 +7,5 @@ export type User = {
   id: number;
   name: string;
   gender: "MALE" | "FEMALE";
-  scoreTarget: number;
-  monthlyDuties: UserMonthlyDuty[];
+  monthlyEvents: UserMonthlyDuty[];
 };
