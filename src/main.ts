@@ -235,7 +235,6 @@ const extractLeafs = (categories: Category[]) => {
 // const scorePerCategory = extractCategoryScoreMap(categories);
 
 const leafNodes = extractLeafs(categories);
-console.log({ leafNodes });
 
 const getCategoryByEvent = (event: string) => {
   return categories.find((x) => x.uniqueName === event);
@@ -251,7 +250,6 @@ users.forEach((user) => {
 
   // calculate base user score
   let totalScore = user.monthlyEvents.reduce((acc, curr, i) => {
-    // duties.push(curr.duty)
     return acc + (getCategoryByEvent(curr.event)?.score ?? 0);
   }, 0);
 
@@ -304,10 +302,10 @@ users.forEach((user) => {
     duties.length
   );
 
-  const generatedMonthlyDuties = duties.map((duty, i) => {
+  const generatedMonthlyEvents = duties.map((duty, i) => {
     return { event: duty, dom: eventDays[i] + 1 };
   });
 
   console.log(user.name, ":", totalScore, ":", user.gender);
-  console.log(generatedMonthlyDuties);
+  console.log(generatedMonthlyEvents);
 });
