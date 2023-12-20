@@ -1,8 +1,10 @@
 export type Category = {
-  name: CategoryNames,
-  sub?: Category[],
-  score?: number,
-}
+  name: CategoryNames;
+  sub?: Category[];
+  score?: number;
+  nofPeoplePerDay?: number;
+  uniqueName?: string;
+};
 
 export enum CategoryNames {
   Surgical_MH = "Surgical_MH",
@@ -29,22 +31,29 @@ export enum CategoryNames {
   Delivery_Room = "Delivery_Room",
   OB_War = "OB_War",
   Emergency = "Emergency",
+  Men_Ward = "Men_Ward",
+  Women_Ward = "Women_Ward",
+  First = "First",
+  Second = "Second",
 }
 
-export type CategoryScoreMap = Map<string, number>
+export type CategoryScoreMap = Map<string, number>;
 
-export function extractCategoryScoreMap(categories: Category[], parentPath: string[] = []): CategoryScoreMap {
-  const res = new Map<string, number>()
+export function extractCategoryScoreMap(
+  categories: Category[],
+  parentPath: string[] = []
+): CategoryScoreMap {
+  const res = new Map<string, number>();
 
   for (const category of categories) {
-    const currPath = [...parentPath, category.name]
-    const pathStr = currPath.join(":")
+    const currPath = [...parentPath, category.name];
+    const pathStr = currPath.join(":");
 
-    if (category.score !== undefined) res.set(pathStr, category.score)
+    if (category.score !== undefined) res.set(pathStr, category.score);
 
     if (category.sub) {
-      const subMap = extractCategoryScoreMap(category.sub, currPath)
-      subMap.forEach((subScore, subPath) => res.set(subPath, subScore))
+      const subMap = extractCategoryScoreMap(category.sub, currPath);
+      subMap.forEach((subScore, subPath) => res.set(subPath, subScore));
     }
   }
 
