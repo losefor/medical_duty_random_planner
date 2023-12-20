@@ -2,6 +2,7 @@ import { Category, CategoryNames as CategoryName } from "./category";
 import { getDaysInMonth, getRandomEvent, randNumsUniqueToMax } from "./utils";
 
 import { users } from "./users";
+import { User } from "./types/user";
 
 const categories: Category[] = [
   {
@@ -216,6 +217,16 @@ const categories: Category[] = [
   },
 ];
 
+interface Context {
+  uniqueName: string;
+  occurrence: number;
+  days: Record<number, number>;
+  meta: { user: User; event: any }[];
+}
+
+// context of the operation
+let ctx: Context[] = [];
+
 const extractLeafs = (categories: Category[]) => {
   let leafs: Category[] = [];
 
@@ -243,7 +254,7 @@ const getCategoryByEvent = (event: string) => {
 // do the calculations
 users.forEach((user) => {
   // events are sorted by dom
-  let duties: string[] = [];
+  let events: string[] = [];
 
   // get the target score for the user
   const scoreTarget = user.gender === "MALE" ? 22 : 21;
@@ -290,7 +301,7 @@ users.forEach((user) => {
       }
 
       if (totalScore + score <= scoreTarget) {
-        duties.push(uniqueName);
+        events.push(uniqueName);
         totalScore += score;
       }
     }
@@ -299,13 +310,40 @@ users.forEach((user) => {
   const eventDays = randNumsUniqueToMax(
     getDaysInMonth(2023, 2),
     user.monthlyEvents.map((duty) => duty.dom),
-    duties.length
+    events.length
   );
 
-  const generatedMonthlyEvents = duties.map((duty, i) => {
-    return { event: duty, dom: eventDays[i] + 1 };
+  const generatedMonthlyEvents = events.map((duty, i) => {
+    // Shape the event to the UserMonthlyDuty type
+    const event = { event: duty, dom: eventDays[i] + 1 };
+
+    const eventCtx = ctx.find((ctx) => ctx.uniqueName === duty);
+
+    if (!eventCtx) {
+      ctx.push({
+        uniqueName: duty,
+        occurrence: 1,
+        days: { [event.dom]: 1 },
+        meta: [{ user, event }],
+      });
+    } else {
+      eventCtx.occurrence += 1;
+      eventCtx.meta.push({ user, event });
+      if (eventCtx.days[event.dom]) {
+        eventCtx.days[event.dom]++;
+      } else {
+        eventCtx.days[event.dom] = 1;
+      }
+    }
+
+    return event;
   });
 
-  console.log(user.name, ":", totalScore, ":", user.gender);
-  console.log(generatedMonthlyEvents);
+  // console.log({
+  //   name: user.name,
+  //   scoreTarget,
+  //   events: generatedMonthlyEvents,
+  // });
 });
+
+console.log(JSON.stringify(ctx));
