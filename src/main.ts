@@ -1,13 +1,5 @@
-import {
-  Category,
-  CategoryNames as CategoryName,
-  extractCategoryScoreMap,
-} from "./category";
-import {
-  getDaysInMonth,
-  getRandomMapEntry,
-  randNumsUniqueToMax,
-} from "./utils";
+import { Category, CategoryNames as CategoryName } from "./category";
+import { getDaysInMonth, getRandomEvent, randNumsUniqueToMax } from "./utils";
 
 import { users } from "./users";
 
@@ -224,12 +216,30 @@ const categories: Category[] = [
   },
 ];
 
+const extractLeafs = (categories: Category[]) => {
+  let leafs: Category[] = [];
+
+  const traverse = (node: Category) => {
+    if (node.sub && node.sub.length > 0) {
+      node.sub.forEach(traverse);
+    } else {
+      leafs.push(node);
+    }
+  };
+
+  categories.forEach(traverse);
+  return leafs;
+};
+
 // get the "leaf" categories into a map of <string_path_to leaf, leaf_score>
+// const scorePerCategory = extractCategoryScoreMap(categories);
 
-const leaf = categories.filter((category) => !category.sub);
-const scorePerCategory = extractCategoryScoreMap(categories);
+const leafNodes = extractLeafs(categories);
+console.log({ leafNodes });
 
-console.log({ leaf });
+const getCategoryByEvent = (event: string) => {
+  return categories.find((x) => x.uniqueName === event);
+};
 
 // do the calculations
 users.forEach((user) => {
@@ -242,7 +252,7 @@ users.forEach((user) => {
   // calculate base user score
   let totalScore = user.monthlyEvents.reduce((acc, curr, i) => {
     // duties.push(curr.duty)
-    return acc + (scorePerCategory.get(curr.duty) ?? 0);
+    return acc + (getCategoryByEvent(curr.event)?.score ?? 0);
   }, 0);
 
   // a user comes in w a base score already greater than their scoreTarget
@@ -252,37 +262,52 @@ users.forEach((user) => {
 
   // add up user scores to the users scoreTarget
   while (totalScore < scoreTarget) {
-    let entry = getRandomMapEntry(scorePerCategory);
+    let event = getRandomEvent(leafNodes);
 
-    if (entry) {
-      const [duty, score] = entry;
+    if (event) {
+      const { score, uniqueName } = event;
+
+      if (!uniqueName) {
+        throw new Error("uniqueName is undefined");
+      }
 
       // Add gender check
-      let isNight = duty.split(":").includes("Night");
+      let isNight = uniqueName.split(":").includes("Night");
+
       while (isNight && user.gender === "FEMALE") {
-        entry = getRandomMapEntry(scorePerCategory);
-        if (!entry) continue;
-        const [duty] = entry;
-        isNight = duty.split(":").includes("Night");
+        event = getRandomEvent(leafNodes);
+
+        if (!event) continue;
+        const { uniqueName } = event;
+
+        if (!uniqueName) {
+          throw new Error("uniqueName is undefined");
+        }
+
+        isNight = uniqueName.split(":").includes("Night");
+      }
+
+      if (!score) {
+        throw new Error("score is undefined");
       }
 
       if (totalScore + score <= scoreTarget) {
-        duties.push(duty);
+        duties.push(uniqueName);
         totalScore += score;
       }
     }
   }
 
-  const dutyDays = randNumsUniqueToMax(
+  const eventDays = randNumsUniqueToMax(
     getDaysInMonth(2023, 2),
     user.monthlyEvents.map((duty) => duty.dom),
     duties.length
   );
+
   const generatedMonthlyDuties = duties.map((duty, i) => {
-    return { duty: duty, dom: dutyDays[i] + 1 };
+    return { event: duty, dom: eventDays[i] + 1 };
   });
 
-  // console.log(user.name, ":", totalScore, ":", user.gender);
-
-  // console.log(generatedMonthlyDuties);
+  console.log(user.name, ":", totalScore, ":", user.gender);
+  console.log(generatedMonthlyDuties);
 });

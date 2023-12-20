@@ -1,5 +1,5 @@
 export type UserMonthlyDuty = {
-  duty: string;
+  event: string;
   dom: number;
 };
 
