@@ -313,9 +313,25 @@ users.forEach((user) => {
     events.length
   );
 
+  // const selectRandomDate = (event: string, dom: number): number => {
+  //   if (
+  //     ctx.find((ctx) => ctx.uniqueName === event)?.days[dom] !==
+  //     getCategoryByEvent(event)?.nofPeoplePerDay
+  //   ) {
+  //     return dom;
+  //   }
+  //   dom = Math.floor(Math.random() * getDaysInMonth(2023, 2));
+  //   return selectRandomDate(event, dom);
+  // };
+
   const generatedMonthlyEvents = events.map((duty, i) => {
+    let dom = eventDays[i] + 1; // dom is 0 based
+
+    //TODO: check if the event is already in the ctx and not exceed nofPeoplePerDay
+    // const randomDom = selectRandomDate(duty, dom);
+
     // Shape the event to the UserMonthlyDuty type
-    const event = { event: duty, dom: eventDays[i] + 1 };
+    const event = { event: duty, dom: dom };
 
     const eventCtx = ctx.find((ctx) => ctx.uniqueName === duty);
 
@@ -339,11 +355,11 @@ users.forEach((user) => {
     return event;
   });
 
-  // console.log({
-  //   name: user.name,
-  //   scoreTarget,
-  //   events: generatedMonthlyEvents,
-  // });
+  console.log({
+    name: user.name,
+    scoreTarget,
+    events: generatedMonthlyEvents,
+  });
 });
 
-console.log(JSON.stringify(ctx));
+// console.log(JSON.stringify(ctx));

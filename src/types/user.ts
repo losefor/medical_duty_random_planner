@@ -8,4 +8,6 @@ export type User = {
   name: string;
   gender: "MALE" | "FEMALE";
   monthlyEvents: UserMonthlyDuty[];
+  allow: string[];
+  deny: string[];
 };
